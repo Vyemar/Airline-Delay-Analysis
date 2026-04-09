@@ -9,6 +9,9 @@
 '''
 This function loads the airline data from the csv file.
 It returns the loaded data.
+
+Function needs to randomly sample 500k-1m rows from original dataset 
+to manage computer memory constraints.
 '''
 def load_data():
     pass
