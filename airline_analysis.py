@@ -12,6 +12,8 @@ It returns the loaded data.
 
 Function needs to randomly sample 500k-1m rows from original dataset 
 to manage computer memory constraints.
+
+DO NOW - Roxie
 '''
 def load_data():
     pass
@@ -22,9 +24,12 @@ def load_data():
 This function acts to clean the data set by removing duplicates, handling missing values,
 correcting inconsistencies, removing unneccessary columns, and ensuring data types are correct.
 It returns the cleaned data set.
+
+DO NOW - Meg
 '''
 def clean_data():
     pass
+
 
 # Function to choose relevant features
 '''
@@ -88,6 +93,8 @@ def choose_components():
 '''
 This function splits the cleaned data into training and testing sets.
 It returns the training and testing datasets.
+
+DO NOW - Lency
 '''
 def split_data():
     pass
