@@ -1,4 +1,6 @@
 # ---------------- Libraries ----------------
+import pandas as pd
+import numpy as np
 
 
 # ---------------- Global ----------------
@@ -31,8 +33,12 @@ Return cleaned dataset
 
 DO NOW - Meg
 '''
-def clean_data():
-    pass
+def clean_data(testSet, trainSet, validateSet):
+    testSet = testSet.replace("0", np.nan)
+    trainSet = trainSet.replace("0", np.nan)
+    validateSet = validateSet.replace("0", np.nan)
+
+    return testSet, trainSet, validateSet
 
 
 # Function to choose relevant features
