@@ -114,8 +114,26 @@ return training and testing datasets
 
 DO NOW - Lency
 '''
-def split_data():
-    pass
+def split_data(data):
+    # check if data is loaded before attempting to split
+    if data is None:
+        print("No data to split. Please load the data first.")
+        return None, None, None
+    
+    # Shuffle the data before splitting to ensure randomness
+    shuffled_data = data.sample(frac=1, random_state=42).reset_index(drop=True)
+
+    #split points for 70% training, 15% validation, 15% testing
+    train_size = int(0.7 * len(shuffled_data))
+    validate_end = int(0.85 * len(shuffled_data))
+
+    # Split the data into training, validation, and testing sets
+    trainSet = shuffled_data[:train_size]
+    validateSet = shuffled_data[train_size:validate_end]
+    testSet = shuffled_data[validate_end:]
+
+    print("data successfully split.")
+    return testSet, trainSet, validateSet
 
 
 # Functiopn to build neural network model
