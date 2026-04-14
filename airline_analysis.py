@@ -1,10 +1,8 @@
 # ---------------- Libraries ----------------
 import pandas as pd
 import numpy as np
-
-
 # ---------------- Global ----------------
-
+num_of_rows = 500000
 
 # ---------------- Functions ----------------
 # Function to load data
@@ -20,7 +18,15 @@ Return loaded dataset
 DO NOW - Roxie
 '''
 def load_data():
-    pass
+    try:
+        file = pd.read_csv("airline.csv.shuffle",encoding="latin1",nrows=num_of_rows)
+        #Test by printing first 20
+        #print(file.head(20))
+        print("File successfully loaded.")
+        return file
+    except FileNotFoundError:
+        print("File not found! Please ensure airline.csv.shuffle is in the same directory as this program (airline_analysis.py)")
+        return None
 
 
 # Function to clean data
@@ -169,4 +175,5 @@ def delay_correlations():
 Initialized code for airline analysis.
 '''
 if __name__ == "__main__":
+    data = load_data()
     pass
