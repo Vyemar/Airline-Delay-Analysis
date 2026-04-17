@@ -88,6 +88,8 @@ This function defines the target variable for analysis (whether or not a flight 
 It should define exactly what the model is predicting based on the cleaned and processed features.
 
 It returns the target variable (0 for a on-time arrival, 1 for a delayed arrival).
+
+- Roxie
 '''
 def target_variable():
     pass
@@ -134,6 +136,8 @@ It should:
 - Set tree to use gini impurity
 - Define any necessary parameters (like max depth, min samples split, etc.)
 - Return the compiled decision tree model ready for training
+
+- Lency
 '''
 def build_model():
     pass
@@ -143,6 +147,8 @@ def build_model():
 '''
 This function trains the decision tree using the training data.
 It returns the trained model and any relevant training history or metrics.
+
+- Roxie
 '''
 def train_model():
     pass
@@ -152,6 +158,8 @@ def train_model():
 '''
 This function validates the decision tree using the testing data.
 It returns the validation results, such as accuracy, precision, recall, or other relevant metrics.
+
+- Meg
 '''
 def validate_model():
     pass
@@ -162,6 +170,8 @@ def validate_model():
 This function uses the trained decision tree to predict if flights will be delayed.
 
 It returns 1 for a predicted delay and 0 for a predicted on-time arrival.
+
+- Lency
 '''
 def predict_delays():
     pass
@@ -172,6 +182,8 @@ def predict_delays():
 This function identifies which features were most important in the decision tree.
 
 Returns feature importance results.
+
+- Meg
 '''
 def feature_importance():
     pass
