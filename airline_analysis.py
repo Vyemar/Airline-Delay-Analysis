@@ -1,8 +1,11 @@
 # ---------------- Libraries ----------------
 import pandas as pd
 import numpy as np
+
+
 # ---------------- Global ----------------
 num_of_rows = 500000
+
 
 # ---------------- Functions ----------------
 # Function to load data
@@ -15,7 +18,7 @@ to manage computer memory constraints.
 
 Return loaded dataset
 
-DO NOW - Roxie
+- Roxie
 '''
 def load_data():
     try:
@@ -31,20 +34,27 @@ def load_data():
 
 # Function to clean data
 '''
-This function acts to clean the data set by removing duplicates, handling missing values,
-correcting inconsistencies, removing unneccessary columns, and ensuring data types are correct.
-It returns the cleaned data set.
+This function acts to clean the data set.
+
+Rows are removed if any of the following are true:
+- Duplicate row
+- Cancelled flight (Cancelled == 1)
+- Diverted flight (Diverted == 1)
+- Missing values in the target variable (Arrival Delay)
+- Impossible values (negative delays, departure times after arrival times, etc.)
+- Column provides an answer to the question "Was the flight delayed?"
+
+Missing values are filled with the median value of the feature 
+across the random sample of the dataset.
+
+Numeric strings are converted to integer values.
 
 Return cleaned dataset
 
-DO NOW - Meg
+- Meg
 '''
 def clean_data(testSet, trainSet, validateSet):
-    testSet = testSet.replace("0", np.nan)
-    trainSet = trainSet.replace("0", np.nan)
-    validateSet = validateSet.replace("0", np.nan)
-
-    return testSet, trainSet, validateSet
+    pass
 
 
 # Function to choose relevant features
@@ -53,6 +63,8 @@ This function chooses the most important features for input and analysis.
 It returns the selected features.
 
 Important features include times, delays, airport/airline identifiers, and operational factors.
+
+- Meg
 '''
 def relevant_features():
     pass
@@ -61,47 +73,23 @@ def relevant_features():
 # Function to encode categorical features
 '''
 This function converts non-numeric categorical features into numeric format.
+
 It returns the transformed features.
+
+- Meg
 '''
 def encode_features():
     pass
 
 
-# Function to normalize data
-'''
-This function normalizes the dataset features to a common scale.
-It returns the normalized data and any relevant scaling parameters.
-'''
-def normalize_data():
-    pass
-
-
 # Function to define target variable
 '''
-This function defines the target variable for analysis, such as delay status or delay duration.
+This function defines the target variable for analysis (whether or not a flight was delayed).
 It should define exactly what the model is predicting based on the cleaned and processed features.
-It returns the target variable.
+
+It returns the target variable (0 for a on-time arrival, 1 for a delayed arrival).
 '''
 def target_variable():
-    pass
-
-
-# Function to apply pca
-'''
-This function applies Principal Component Analysis (PCA) to reduce the dimensionality of the dataset 
-while retaining as much variance as possible.
-It returns the PCA-transformed dataset and any relevant PCA parameters.
-'''
-def apply_pca():
-    pass
-
-
-# Function to choose components
-'''
-This function determines the optimal number of principal components to retain.
-It returns the number of components to retain.
-'''
-def choose_components():
     pass
 
 
@@ -112,7 +100,7 @@ It returns the training and testing datasets.
 
 return training and testing datasets
 
-DO NOW - Lency
+- Lency
 '''
 def split_data(data):
     # check if data is loaded before attempting to split
@@ -136,16 +124,24 @@ def split_data(data):
     return testSet, trainSet, validateSet
 
 
-# Functiopn to build neural network model
-'''This function builds a neural network model for predicting flight delays.
-It returns the compiled neural network model.'''
+# Functiopn to build decision tree
+'''
+This function builds a decision tree for predicting flight delays. It uses gini impurity to
+determine the best splits at each node.
+
+It should:
+- Create decision tree classifier
+- Set tree to use gini impurity
+- Define any necessary parameters (like max depth, min samples split, etc.)
+- Return the compiled decision tree model ready for training
+'''
 def build_model():
     pass
 
 
 # Function to train model
 '''
-This function trains the neural network model using the training data.
+This function trains the decision tree using the training data.
 It returns the trained model and any relevant training history or metrics.
 '''
 def train_model():
@@ -154,37 +150,30 @@ def train_model():
 
 # Function to validate model
 '''
-This function validates the neural network model using the testing data.
+This function validates the decision tree using the testing data.
 It returns the validation results, such as accuracy, precision, recall, or other relevant metrics.
 '''
 def validate_model():
     pass
 
 
-# Function to calculate conditional probabilities
-'''
-This function calculates the conditional probabilities of flight delays given certain features or conditions.
-It returns the calculated probabilities and any relevant insights derived from them.
-'''
-def conditional_probabilities():
-    pass
-
-
 # Function to predict delays
 '''
-This function uses the trained neural network model to predict flight delays on new or unseen data.
-It returns the predicted delay status or delay duration for the input data.
+This function uses the trained decision tree to predict if flights will be delayed.
+
+It returns 1 for a predicted delay and 0 for a predicted on-time arrival.
 '''
 def predict_delays():
     pass
 
 
-# Function to analyze delay correlations
+# Function to analyze feature importance
 '''
-This function analyzes the correlations between different features and flight delays.
-It returns insights into which features are most strongly correlated with delays and how they interact with each other
+This function identifies which features were most important in the decision tree.
+
+Returns feature importance results.
 '''
-def delay_correlations():
+def feature_importance():
     pass
 
 
@@ -193,5 +182,6 @@ def delay_correlations():
 Initialized code for airline analysis.
 '''
 if __name__ == "__main__":
-    data = load_data()
-    pass
+    dataFile = load_data()
+    testSet, trainSet, validateSet = split_data(dataFile)
+    testSet, trainSet, validateSet = clean_data(testSet, trainSet, validateSet)
