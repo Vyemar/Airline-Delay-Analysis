@@ -1,6 +1,7 @@
 # ---------------- Libraries ----------------
 
 import pandas as pd
+import numpy as np
 # ---------------- Global ----------------
 num_of_rows = 500000
 
@@ -78,8 +79,13 @@ This function defines the target variable for analysis, such as delay status or 
 It should define exactly what the model is predicting based on the cleaned and processed features.
 It returns the target variable.
 '''
-def target_variable():
-    pass
+def target_variable(df):
+    if df is None:
+        print("Target variable not found")
+        return None
+    #If we are 20 minutes late, it's a delay.
+    target = (df['ArrDelay'] >= 20).astype(int)
+    return target
 
 
 # Function to apply pca
@@ -126,8 +132,14 @@ def build_model():
 This function trains the neural network model using the training data.
 It returns the trained model and any relevant training history or metrics.
 '''
-def train_model():
-    pass
+def train_model(model, X_train, y_train):
+    try:
+        model.fit(X_train, y_train)
+        print("Model has finished the training phase!")
+        return model
+    except Exception as e:
+        print(f"Something went wrong while training: {e}")
+        return None
 
 
 # Function to validate model
@@ -171,5 +183,12 @@ def delay_correlations():
 Initialized code for airline analysis.
 '''
 if __name__ == "__main__":
-    data = load_data()
-    pass
+    dataFile = load_data()
+    testSet, trainSet, validateSet = split_data(dataFile)
+    testSet, trainSet, validateSet = clean_data(testSet, trainSet, validateSet)
+    y_train = target_variable(trainSet)
+    y_validate = target_variable(validateSet)
+    tree = build_model()
+    delays = ['ArrDelay', 'Cancelled', 'Diverted', 'FlightNum', 'CarrierDelay', 'WeatherDelay', 'NASDelay', 'SecurityDelay', 'LateAircraftDelay']
+    X_train = trainSet.drop(columns=delays).select_dtypes(include=[np.number])
+    trained_tree = train_model(tree, X_train, y_train)
