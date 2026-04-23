@@ -1,7 +1,11 @@
 # ---------------- Libraries ----------------
+from matplotlib import cm
 import pandas as pd
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+
+
 # ---------------- Global ----------------
 num_of_rows = 500000
 
@@ -53,7 +57,84 @@ Return cleaned dataset
 - Meg
 '''
 def clean_data(testSet, trainSet, validateSet):
-    pass
+    def clean_one(df):
+        if df is None:
+            return None
+
+        df = df.copy()
+
+        # Treat NA and blank strings as missing values
+        df = df.replace(["NA", "", " "], np.nan)
+
+        # Remove duplicate rows
+        df = df.drop_duplicates()
+
+        # Convert columns that should be numeric
+        numeric_cols = [
+            "ActualElapsedTime", "AirTime", "ArrDelay", "ArrTime", "CRSArrTime",
+            "CRSDepTime", "CRSElapsedTime", "Cancelled", "CarrierDelay",
+            "DayOfWeek", "DayofMonth", "DepDelay", "DepTime", "Distance",
+            "Diverted", "FlightNum", "LateAircraftDelay", "Month", "NASDelay",
+            "SecurityDelay", "TaxiIn", "TaxiOut", "WeatherDelay", "Year"
+        ]
+
+        for col in numeric_cols:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        # Remove cancelled and diverted flights
+        if "Cancelled" in df.columns:
+            df = df[df["Cancelled"] != 1]
+
+        if "Diverted" in df.columns:
+            df = df[df["Diverted"] != 1]
+
+        # Remove rows missing target variable
+        if "ArrDelay" in df.columns:
+            df = df.dropna(subset=["ArrDelay"])
+
+        # Remove clearly impossible values
+        if "Distance" in df.columns:
+            df = df[df["Distance"] >= 0]
+
+        for col in ["ActualElapsedTime", "AirTime", "CRSElapsedTime", "TaxiIn", "TaxiOut"]:
+            if col in df.columns:
+                df = df[(df[col].isna()) | (df[col] >= 0)]
+
+        # These columns leak the answer or are post-arrival delay breakdowns
+        leakage_cols = [
+            "ArrDelay",
+            "CarrierDelay",
+            "LateAircraftDelay",
+            "NASDelay",
+            "SecurityDelay",
+            "WeatherDelay",
+            "CancellationCode"
+        ]
+
+        existing_leakage = [col for col in leakage_cols if col in df.columns]
+        df = df.drop(columns=existing_leakage)
+
+        # Fill missing numeric columns with median
+        remaining_numeric = df.select_dtypes(include=[np.number]).columns
+        for col in remaining_numeric:
+            df[col] = df[col].fillna(df[col].median())
+
+        # Fill missing categorical columns with mode
+        remaining_object = df.select_dtypes(include=["object"]).columns
+        for col in remaining_object:
+            if not df[col].mode().empty:
+                df[col] = df[col].fillna(df[col].mode()[0])
+            else:
+                df[col] = df[col].fillna("Unknown")
+
+        return df.reset_index(drop=True)
+
+    testSet = clean_one(testSet)
+    trainSet = clean_one(trainSet)
+    validateSet = clean_one(validateSet)
+
+    return testSet, trainSet, validateSet
 
 
 # Function to choose relevant features
@@ -65,8 +146,38 @@ Important features include times, delays, airport/airline identifiers, and opera
 
 - Meg
 '''
-def relevant_features():
-    pass
+def relevant_features(testSet, trainSet, validateSet):
+    selected_columns = [
+        "Year",
+        "Month",
+        "DayOfWeek",
+        "DayofMonth",
+        "CRSDepTime",
+        "DepTime",
+        "DepDelay",
+        "CRSArrTime",
+        "CRSElapsedTime",
+        "ActualElapsedTime",
+        "AirTime",
+        "TaxiIn",
+        "TaxiOut",
+        "FlightNum",
+        "Distance",
+        "UniqueCarrier",
+        "Origin",
+        "Dest",
+        "TailNum"
+    ]
+
+    def select_cols(df):
+        available_cols = [col for col in selected_columns if col in df.columns]
+        return df[available_cols].copy()
+
+    testX = select_cols(testSet)
+    trainX = select_cols(trainSet)
+    validateX = select_cols(validateSet)
+
+    return testX, trainX, validateX
 
 
 # Function to encode categorical features
@@ -77,8 +188,23 @@ It returns the transformed features.
 
 - Meg
 '''
-def encode_features():
-    pass
+def encode_features(testX, trainX, validateX):
+    # Combine first so all sets get the same variable columns
+    combined = pd.concat(
+        [trainX, validateX, testX],
+        keys=["train", "validate", "test"]
+    )
+
+    categorical_cols = ["UniqueCarrier", "Origin", "Dest", "TailNum"]
+    categorical_cols = [col for col in categorical_cols if col in combined.columns]
+
+    combined = pd.get_dummies(combined, columns=categorical_cols, drop_first=True)
+
+    trainX = combined.xs("train")
+    validateX = combined.xs("validate")
+    testX = combined.xs("test")
+
+    return testX, trainX, validateX
 
 
 # Function to define target variable
@@ -171,8 +297,29 @@ It returns the validation results, such as accuracy, precision, recall, or other
 
 - Meg
 '''
-def validate_model():
-    pass
+def validate_model(model, xValidate, yValidate):
+    predictions = model.predict(xValidate)
+    accuracy = accuracy_score(yValidate, predictions)
+    precision = precision_score(yValidate, predictions, zero_division=0)
+    recall = recall_score(yValidate, predictions, zero_division=0)
+    f1 = f1_score(yValidate, predictions, zero_division=0)
+    matrix = confusion_matrix(yValidate, predictions)
+
+    print("Validation Results:")
+    print(f"Accuracy: {accuracy:.4f}")
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall: {recall:.4f}")
+    print(f"F1 Score: {f1:.4f}")
+    print("Confusion Matrix:")
+    print(matrix)
+
+    return {
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "confusion_matrix": matrix
+    }
 
 
 # Function to predict delays
@@ -195,8 +342,18 @@ Returns feature importance results.
 
 - Meg
 '''
-def feature_importance():
-    pass
+def feature_importance(model, feature_names):
+    importance_df = pd.DataFrame({
+        "Feature": feature_names,
+        "Importance": model.feature_importances_
+    })
+
+    importance_df = importance_df.sort_values(by="Importance", ascending=False)
+
+    print("Top Feature Importances:")
+    print(importance_df.head(15))
+
+    return importance_df
 
 
 # Main function
@@ -206,10 +363,13 @@ Initialized code for airline analysis.
 if __name__ == "__main__":
     dataFile = load_data()
     testSet, trainSet, validateSet = split_data(dataFile)
+    yTrain = target_variable(trainSet)
+    yValidate = target_variable(validateSet)
+    yTest = target_variable(testSet)
     testSet, trainSet, validateSet = clean_data(testSet, trainSet, validateSet)
-    y_train = target_variable(trainSet)
-    y_validate = target_variable(validateSet)
     tree = build_model()
     delays = ['ArrDelay', 'Cancelled', 'Diverted', 'FlightNum', 'CarrierDelay', 'WeatherDelay', 'NASDelay', 'SecurityDelay', 'LateAircraftDelay']
     X_train = trainSet.drop(columns=delays).select_dtypes(include=[np.number])
-    trained_tree = train_model(tree, X_train, y_train)
+    trained_tree = train_model(tree, X_train, yTrain)
+    testX, trainX, validateX = relevant_features(testSet, trainSet, validateSet)
+    testX, trainX, validateX = encode_features(testX, trainX, validateX)
