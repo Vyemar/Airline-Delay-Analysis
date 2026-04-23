@@ -1,6 +1,7 @@
 # ---------------- Libraries ----------------
 import pandas as pd
 import numpy as np
+from sklearn.tree import DecisionTreeClassifier
 
 
 # ---------------- Global ----------------
@@ -140,7 +141,15 @@ It should:
 - Lency
 '''
 def build_model():
-    pass
+    model = DecisionTreeClassifier(
+        criterion="gini",
+        max_depth=10,
+        min_samples_split=20,
+        min_samples_leaf=10,
+        random_state=42
+    )
+    return model
+
 
 
 # Function to train model
@@ -173,8 +182,14 @@ It returns 1 for a predicted delay and 0 for a predicted on-time arrival.
 
 - Lency
 '''
-def predict_delays():
-    pass
+def predict_delays(model, X_test):
+    try:
+        predictions = model.predict(X_test)
+        print("Predictions completed.")
+        return predictions
+    except Exception as e:
+        print(f"Something went wrong while predicting: {e}")
+        return None
 
 
 # Function to analyze feature importance
