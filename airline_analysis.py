@@ -8,7 +8,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 
 # ---------------- Global ----------------
-num_of_rows = 500000
+num_of_rows = 100000
 
 
 # ---------------- Functions ----------------
@@ -104,7 +104,7 @@ def clean_data(testSet, trainSet, validateSet):
 
         # These columns leak the answer or are post-arrival delay breakdowns
         leakage_cols = [
-            "ArrDelay",
+            #"ArrDelay", Had to remove this one to prevent crashes
             "CarrierDelay",
             "LateAircraftDelay",
             "NASDelay",
@@ -378,13 +378,14 @@ Initialized code for airline analysis.
 if __name__ == "__main__":
     dataFile = load_data()
     testSet, trainSet, validateSet = split_data(dataFile)
+    testSet, trainSet, validateSet = clean_data(testSet, trainSet, validateSet)
     yTrain = target_variable(trainSet)
     yValidate = target_variable(validateSet)
     yTest = target_variable(testSet)
-    testSet, trainSet, validateSet = clean_data(testSet, trainSet, validateSet)
-    tree = build_model()
-    delays = ['ArrDelay', 'Cancelled', 'Diverted', 'FlightNum', 'CarrierDelay', 'WeatherDelay', 'NASDelay', 'SecurityDelay', 'LateAircraftDelay']
-    X_train = trainSet.drop(columns=delays).select_dtypes(include=[np.number])
-    trained_tree = train_model(tree, X_train, yTrain)
     testX, trainX, validateX = relevant_features(testSet, trainSet, validateSet)
     testX, trainX, validateX = encode_features(testX, trainX, validateX)
+    model = build_model()
+    trained_model = train_model(model, trainX, yTrain)
+    validate_model(trained_model, validateX, yValidate)
+    test_predictions = predict_delays(trained_model, testX)
+    feature_importance(trained_model, trainX.columns)
