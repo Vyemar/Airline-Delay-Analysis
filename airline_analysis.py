@@ -1,8 +1,10 @@
 # ---------------- Libraries ----------------
 from matplotlib import cm
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.tree import DecisionTreeClassifier
 
@@ -21,18 +23,18 @@ Function needs to randomly sample 500k-1m rows from original dataset
 to manage computer memory constraints.
 
 Return loaded dataset
-
-- Roxie
 '''
 def load_data():
     try:
-        file = pd.read_csv("airline.csv.shuffle",encoding="latin1",nrows=num_of_rows)
-        #Test by printing first 20
-        #print(file.head(20))
-        print("File successfully loaded.")
+        file = pd.read_csv(
+            "airline.csv.shuffle",
+            encoding="latin1",
+            nrows=100000
+        )
+        print("Loaded sample successfully.")
         return file
-    except FileNotFoundError:
-        print("File not found! Please ensure airline.csv.shuffle is in the same directory as this program (airline_analysis.py)")
+    except Exception as e:
+        print("Load error:", e)
         return None
 
 
@@ -54,8 +56,6 @@ across the random sample of the dataset.
 Numeric strings are converted to integer values.
 
 Return cleaned dataset
-
-- Meg
 '''
 def clean_data(testSet, trainSet, validateSet):
     def clean_one(df):
@@ -144,8 +144,6 @@ This function chooses the most important features for input and analysis.
 It returns the selected features.
 
 Important features include times, delays, airport/airline identifiers, and operational factors.
-
-- Meg
 '''
 def relevant_features(testSet, trainSet, validateSet):
     selected_columns = [
@@ -186,8 +184,6 @@ def relevant_features(testSet, trainSet, validateSet):
 This function converts non-numeric categorical features into numeric format.
 
 It returns the transformed features.
-
-- Meg
 '''
 def encode_features(testX, trainX, validateX):
     # Combine first so all sets get the same variable columns
@@ -214,8 +210,6 @@ This function defines the target variable for analysis (whether or not a flight 
 It should define exactly what the model is predicting based on the cleaned and processed features.
 
 It returns the target variable (0 for a on-time arrival, 1 for a delayed arrival).
-
-- Roxie
 '''
 def target_variable(df):
     if df is None:
@@ -232,8 +226,6 @@ This function splits the cleaned data into training and testing sets.
 It returns the training and testing datasets.
 
 return training and testing datasets
-
-- Lency
 '''
 def split_data(data):
     # check if data is loaded before attempting to split
@@ -267,8 +259,6 @@ It should:
 - Set tree to use gini impurity
 - Define any necessary parameters (like max depth, min samples split, etc.)
 - Return the compiled decision tree model ready for training
-
-- Lency
 '''
 def build_model():
     model = DecisionTreeClassifier(
@@ -286,8 +276,6 @@ def build_model():
 '''
 This function trains the decision tree using the training data.
 It returns the trained model and any relevant training history or metrics.
-
-- Roxie
 '''
 def train_model(model, X_train, y_train):
     try:
@@ -302,9 +290,6 @@ def train_model(model, X_train, y_train):
 # Function to validate model
 '''
 This function validates the decision tree using the testing data.
-It returns the validation results, such as accuracy, precision, recall, or other relevant metrics.
-
-- Meg
 '''
 def validate_model(model, xValidate, yValidate):
     predictions = model.predict(xValidate)
@@ -336,8 +321,6 @@ def validate_model(model, xValidate, yValidate):
 This function uses the trained decision tree to predict if flights will be delayed.
 
 It returns 1 for a predicted delay and 0 for a predicted on-time arrival.
-
-- Lency
 '''
 def predict_delays(model, X_test):
     try:
@@ -354,8 +337,6 @@ def predict_delays(model, X_test):
 This function identifies which features were most important in the decision tree.
 
 Returns feature importance results.
-
-- Meg
 '''
 def feature_importance(model, feature_names):
     importance_df = pd.DataFrame({
@@ -371,21 +352,109 @@ def feature_importance(model, feature_names):
     return importance_df
 
 
+def visualize_code(y, title="Delay Class Distribution"):
+    counts = y.value_counts()
+
+    plt.figure(figsize=(6, 4))
+    counts.plot(kind="bar")
+    plt.title(title)
+    plt.xlabel("Class: 0 = On-Time, 1 = Delayed")
+    plt.ylabel("Number of Flights")
+    plt.xticks(rotation=0)
+    plt.tight_layout()
+    plt.savefig("class_distribution.png")
+    plt.show()
+
+def plot_confusion_matrix(model, X, y):
+    predictions = model.predict(X)
+
+    ConfusionMatrixDisplay.from_predictions(
+        y,
+        predictions,
+        display_labels=["On-Time", "Delayed"]
+    )
+
+    plt.title("Decision Tree Confusion Matrix")
+    plt.tight_layout()
+    plt.savefig("confusion_matrix.png")
+    plt.show()
+
+def feature_importance(model, feature_names):
+    importance_df = pd.DataFrame({
+        "Feature": feature_names,
+        "Importance": model.feature_importances_
+    })
+
+    importance_df = importance_df.sort_values(by="Importance", ascending=False)
+
+    print("Top Feature Importances:")
+    print(importance_df.head(15))
+
+    plt.figure(figsize=(10, 6))
+    importance_df.head(15).plot(
+        x="Feature",
+        y="Importance",
+        kind="bar",
+        legend=False
+    )
+
+    plt.title("Top 15 Feature Importances")
+    plt.xlabel("Feature")
+    plt.ylabel("Importance")
+    plt.xticks(rotation=45, ha="right")
+    plt.tight_layout()
+    plt.savefig("feature_importance.png")
+    plt.show()
+
+    return importance_df
+
+def plot_metrics(results):
+    metrics = {
+        "Accuracy": results["accuracy"],
+        "Precision": results["precision"],
+        "Recall": results["recall"],
+        "F1 Score": results["f1"]
+    }
+
+    plt.figure(figsize=(7, 4))
+    plt.bar(metrics.keys(), metrics.values())
+    plt.title("Decision Tree Validation Metrics")
+    plt.ylabel("Score")
+    plt.ylim(0, 1)
+    plt.tight_layout()
+    plt.savefig("validation_metrics.png")
+    plt.show()
+
 # Main function
 '''
 Initialized code for airline analysis.
 '''
 if __name__ == "__main__":
     dataFile = load_data()
+
+    if dataFile is None:
+        print("Program stopped because the dataset could not be loaded.")
+        exit()
+
     testSet, trainSet, validateSet = split_data(dataFile)
     testSet, trainSet, validateSet = clean_data(testSet, trainSet, validateSet)
+
     yTrain = target_variable(trainSet)
     yValidate = target_variable(validateSet)
     yTest = target_variable(testSet)
+
+    visualize_code(yTrain, "Training Set Delay Distribution")
+
     testX, trainX, validateX = relevant_features(testSet, trainSet, validateSet)
     testX, trainX, validateX = encode_features(testX, trainX, validateX)
+
     model = build_model()
     trained_model = train_model(model, trainX, yTrain)
-    validate_model(trained_model, validateX, yValidate)
+
+    results = validate_model(trained_model, validateX, yValidate)
+
+    plot_confusion_matrix(trained_model, validateX, yValidate)
+    plot_metrics(results)
+
     test_predictions = predict_delays(trained_model, testX)
     feature_importance(trained_model, trainX.columns)
